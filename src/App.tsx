@@ -43,14 +43,14 @@ declare global {
 
 export default function App() {
   const [messages, setMessages] = useState<Message[]>(() => {
-    const saved = localStorage.getItem('pufuatara_chats');
+    const saved = localStorage.getItem('pufutara_chats');
     return saved ? JSON.parse(saved) : [];
   });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('pufuatara_theme') === 'dark';
+    return localStorage.getItem('pufutara_theme') === 'dark';
   });
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<{ mimeType: string; data: string; url: string } | null>(null);
@@ -58,7 +58,7 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedModel, setSelectedModel] = useState(() => {
-    return localStorage.getItem('pufuatara_model') || 'gemini-3.1-flash-lite-preview';
+    return localStorage.getItem('pufutara_model') || 'gemini-3.1-flash-lite-preview';
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,22 +66,22 @@ export default function App() {
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
-    localStorage.setItem('pufuatara_chats', JSON.stringify(messages));
+    localStorage.setItem('pufutara_chats', JSON.stringify(messages));
     scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
-      localStorage.setItem('pufuatara_theme', 'dark');
+      localStorage.setItem('pufutara_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
-      localStorage.setItem('pufuatara_theme', 'light');
+      localStorage.setItem('pufutara_theme', 'light');
     }
   }, [isDarkMode]);
 
   useEffect(() => {
-    localStorage.setItem('pufuatara_model', selectedModel);
+    localStorage.setItem('pufutara_model', selectedModel);
   }, [selectedModel]);
 
   const scrollToBottom = () => {
@@ -189,7 +189,7 @@ export default function App() {
   const startNewChat = () => {
     if (confirm('Mulai chat baru? Riwayat saat ini akan dihapus.')) {
       setMessages([]);
-      localStorage.removeItem('pufuatara_chats');
+      localStorage.removeItem('pufutara_chats');
     }
   };
 
@@ -264,7 +264,7 @@ export default function App() {
         {/* Top Header */}
         <header className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-medium text-zinc-700 dark:text-zinc-300">Pufuatara AI</span>
+            <span className="text-xl font-medium text-zinc-700 dark:text-zinc-300">Pufutara AI</span>
             <div className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-[10px] font-bold text-zinc-500 uppercase">Pro</div>
           </div>
           <div className="flex items-center gap-4">
@@ -282,7 +282,7 @@ export default function App() {
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center px-4">
               <h2 className="text-5xl font-medium mb-12 text-center leading-tight">
-                <span className="gemini-gradient-text">Halo, Pufuatara.</span>
+                <span className="gemini-gradient-text">Halo, Pufutara.</span>
                 <br />
                 <span className="text-zinc-300 dark:text-zinc-600">Ada yang bisa saya bantu?</span>
               </h2>
@@ -450,7 +450,7 @@ export default function App() {
             </div>
           </form>
           <p className="text-[11px] text-center text-zinc-500 mt-3">
-            Pufuatara dapat menampilkan info yang tidak akurat, termasuk tentang orang, jadi periksa kembali responsnya. 
+            Pufutara dapat menampilkan info yang tidak akurat, termasuk tentang orang, jadi periksa kembali responsnya. 
             <a href="#" className="underline ml-1">Privasi Anda dan Aplikasi Gemini</a>
           </p>
         </div>
@@ -475,7 +475,7 @@ export default function App() {
                 </button>
               </div>
               <div className="space-y-4 text-zinc-600 dark:text-zinc-300">
-                <p>Selamat datang di <strong>Pufuatara AI</strong>! Berikut cara menggunakannya:</p>
+                <p>Selamat datang di <strong>Pufutara AI</strong>! Berikut cara menggunakannya:</p>
                 <ul className="list-disc ml-6 space-y-2">
                   <li><strong>Chat:</strong> Ketik pesan Anda di kotak input bawah.</li>
                   <li><strong>Gambar:</strong> Klik ikon gambar untuk mengunggah foto dan bertanya tentangnya.</li>
@@ -534,7 +534,7 @@ export default function App() {
                     onClick={() => {
                       if(confirm('Hapus semua riwayat chat?')) {
                         setMessages([]);
-                        localStorage.removeItem('pufuatara_chats');
+                        localStorage.removeItem('pufutara_chats');
                         setShowSettings(false);
                       }
                     }}
@@ -545,7 +545,7 @@ export default function App() {
                 </div>
 
                 <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs text-zinc-400 text-center">Pufuatara AI v1.2.0 • Powered by Google Gemini</p>
+                  <p className="text-xs text-zinc-400 text-center">Pufutara AI v1.2.0 • Powered by Google Gemini</p>
                 </div>
               </div>
 
