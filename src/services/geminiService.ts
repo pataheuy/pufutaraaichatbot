@@ -2,9 +2,21 @@ import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
 const MODEL_NAME = "gemini-3.1-flash-lite-preview";
 
+export interface MessagePart {
+  text?: string;
+  inlineData?: {
+    mimeType: string;
+    data: string;
+  };
+}
+
 export interface Message {
   role: "user" | "model";
   content: string;
+  image?: {
+    mimeType: string;
+    data: string;
+  };
 }
 
 export class GeminiService {
@@ -18,30 +30,44 @@ export class GeminiService {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
-  async sendMessage(history: Message[], message: string) {
-    const chat = this.ai.chats.create({
-      model: MODEL_NAME,
-      config: {
-        systemInstruction: "You are Pufuatara AI, a helpful, friendly, and intelligent AI assistant. You provide concise yet comprehensive answers. Your tone is professional but approachable.",
-      },
-      // Convert history to the format expected by the SDK if needed, 
-      // but sendMessage usually handles the current turn.
-      // For full history management, we'd pass it to create().
+  async sendMessage(history: Message[], message: string, image?: { mimeType: string; data: string }, modelName: string = MODEL_NAME) {
+    const formattedHistory = history.map(msg => {
+      const parts: any[] = [{ text: msg.content }];
+      if (msg.image) {
+        parts.push({
+          inlineData: {
+            mimeType: msg.image.mimeType,
+            data: msg.image.data
+          }
+        });
+      }
+      return {
+        role: msg.role,
+        parts
+      };
     });
-
-    // The SDK expects history in the create call for persistent context
-    const formattedHistory = history.map(msg => ({
-      role: msg.role,
-      parts: [{ text: msg.content }]
-    }));
 
     const session = this.ai.chats.create({
-      model: MODEL_NAME,
+      model: modelName,
       history: formattedHistory,
       config: {
-        systemInstruction: "You are Pufuatara AI, a helpful, friendly, and intelligent AI assistant.",
+        systemInstruction: "You are Pufuatara AI, a helpful, friendly, and intelligent AI assistant. You can see and analyze images if provided.",
       }
     });
+
+    if (image) {
+      return session.sendMessageStream({
+        message: [
+          { text: message },
+          {
+            inlineData: {
+              mimeType: image.mimeType,
+              data: image.data
+            }
+          }
+        ]
+      });
+    }
 
     return session.sendMessageStream({ message });
   }

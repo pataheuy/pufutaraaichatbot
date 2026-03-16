@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
@@ -9,9 +11,15 @@
 }
 
 @layer base {
+  html {
+    @apply transition-colors duration-300;
+  }
   body {
-    @apply bg-[#f0f4f9] text-[#1f1f1f] antialiased;
+    @apply bg-[#f0f4f9] text-[#1f1f1f] antialiased transition-colors duration-300;
     font-family: var(--font-sans);
+  }
+  html.dark body {
+    @apply bg-[#131314] text-[#e3e3e3];
   }
 }
 
@@ -22,15 +30,15 @@
 }
 
 .gemini-input-container {
-  @apply flex items-center bg-[#f0f4f9] rounded-full px-6 py-3 focus-within:bg-white focus-within:shadow-md transition-all duration-200 border border-transparent focus-within:border-zinc-200;
+  @apply flex items-center bg-[#f0f4f9] dark:bg-[#1e1f20] rounded-full px-6 py-3 focus-within:bg-white dark:focus-within:bg-[#1e1f20] focus-within:shadow-md transition-all duration-200 border border-transparent focus-within:border-zinc-200 dark:focus-within:border-zinc-700;
 }
 
 .sidebar-item {
-  @apply flex items-center gap-3 px-4 py-2.5 rounded-full text-sm font-medium text-zinc-700 hover:bg-zinc-200/50 transition-colors cursor-pointer;
+  @apply flex items-center gap-3 px-4 py-2.5 rounded-full text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 transition-colors cursor-pointer;
 }
 
 .sidebar-item.active {
-  @apply bg-[#e8f0fe] text-[#1a73e8];
+  @apply bg-[#e8f0fe] text-[#1a73e8] dark:bg-[#004a77] dark:text-[#c2e7ff];
 }
 
 .message-container {
@@ -42,7 +50,7 @@
 }
 
 .user-message-content {
-  @apply bg-[#e9eef6] rounded-2xl px-5 py-3 text-[15px] max-w-[80%];
+  @apply bg-[#e9eef6] dark:bg-[#37393b] rounded-2xl px-5 py-3 text-[15px] max-w-[80%] text-zinc-800 dark:text-[#e3e3e3];
 }
 
 .ai-message {
@@ -50,7 +58,7 @@
 }
 
 .ai-message-content {
-  @apply flex-1 text-[15px] leading-relaxed text-zinc-800;
+  @apply flex-1 text-[15px] leading-relaxed text-zinc-800 dark:text-[#e3e3e3];
 }
 
 .sparkle-icon {
@@ -65,4 +73,51 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Markdown Styles */
+.prose {
+  @apply text-[15px] leading-relaxed text-zinc-800 dark:text-[#e3e3e3];
+}
+.prose p {
+  @apply mb-4 last:mb-0;
+}
+.prose ul, .prose ol {
+  @apply mb-4 ml-6 list-outside;
+}
+.prose ul {
+  @apply list-disc;
+}
+.prose ol {
+  @apply list-decimal;
+}
+.prose li {
+  @apply mb-1;
+}
+.prose h1, .prose h2, .prose h3 {
+  @apply font-bold mb-3 mt-6 first:mt-0 text-zinc-900 dark:text-white;
+}
+.prose h1 { @apply text-2xl; }
+.prose h2 { @apply text-xl; }
+.prose h3 { @apply text-lg; }
+.prose code {
+  @apply bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-sm font-mono text-pink-600 dark:text-pink-400;
+}
+.prose pre {
+  @apply my-4 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700;
+}
+.prose pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+.prose blockquote {
+  @apply border-l-4 border-zinc-200 dark:border-zinc-700 pl-4 italic my-4;
+}
+.prose table {
+  @apply w-full border-collapse mb-4;
+}
+.prose th, .prose td {
+  @apply border border-zinc-200 dark:border-zinc-700 p-2 text-left;
+}
+.prose th {
+  @apply bg-zinc-50 dark:bg-zinc-800 font-bold;
 }
