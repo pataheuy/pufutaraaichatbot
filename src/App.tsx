@@ -18,6 +18,7 @@ import {
   Sun,
   Trash2,
   X,
+  Square,
   Volume2,
   VolumeX,
   Globe,
@@ -57,18 +58,61 @@ export default function App() {
   const [isListening, setIsListening] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showNewChatConfirm, setShowNewChatConfirm] = useState(false);
   const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-lite-preview');
+  const [randomSuggestions, setRandomSuggestions] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const suggestionsPool = [
+    "Apa saja yang bisa kamu lakukan sebagai AI?",
+    "Rekomendasi AI untuk mengedit video",
+    "Bagaimana cara kerja model bahasa besar?",
+    "Rekomendasi AI untuk membantu coding",
+    "Apa perbedaan antara Gemini dan GPT?",
+    "Bantu saya membuat prompt AI yang efektif",
+    "Rekomendasi AI untuk desain grafis",
+    "Bagaimana AI bisa membantu produktivitas?",
+    "Jelaskan tentang etika dalam pengembangan AI",
+    "Rekomendasi AI untuk riset akademik",
+    "Cara menggunakan AI untuk belajar bahasa",
+    "Apa itu Generative AI dan contohnya?",
+    "Rekomendasi AI untuk menulis artikel",
+    "Bagaimana masa depan AI menurutmu?",
+    "Tips menggunakan AI untuk analisis data"
+  ];
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key.length > 1 && e.key !== 'Backspace') return;
+      
+      inputRef.current?.focus();
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const shuffled = [...suggestionsPool].sort(() => 0.5 - Math.random());
+    setRandomSuggestions(shuffled.slice(0, 4));
+  }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const isStoppingRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Auto-scroll disabled per user request to let user scroll manually
+    // scrollToBottom();
   }, [messages]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,6 +184,8 @@ export default function App() {
     
     setMessages(newMessages);
     setIsLoading(true);
+    setIsGenerating(true);
+    isStoppingRef.current = false;
 
     try {
       const stream = await geminiService.sendMessage(
@@ -153,6 +199,7 @@ export default function App() {
       setMessages(prev => [...prev, { role: 'model', content: '' }]);
 
       for await (const chunk of stream) {
+        if (isStoppingRef.current) break;
         const text = chunk.text || '';
         fullResponse += text;
         setMessages(prev => {
@@ -160,13 +207,24 @@ export default function App() {
           updated[updated.length - 1] = { role: 'model', content: fullResponse };
           return updated;
         });
+        // Subtle scroll during generation
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      setMessages(prev => [...prev, { role: 'model', content: 'Maaf, terjadi kesalahan. Silakan coba lagi.' }]);
+      if (!isStoppingRef.current) {
+        console.error('Error sending message:', error);
+        setMessages(prev => [...prev, { role: 'model', content: 'Maaf, terjadi kesalahan. Silakan coba lagi.' }]);
+      }
     } finally {
       setIsLoading(false);
+      setIsGenerating(false);
     }
+  };
+
+  const stopGeneration = () => {
+    isStoppingRef.current = true;
+    setIsGenerating(false);
+    setIsLoading(false);
   };
 
   const copyToClipboard = (text: string, id: number) => {
@@ -176,33 +234,46 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden transition-colors duration-300 bg-white text-black">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className="flex h-screen overflow-hidden transition-colors duration-300 bg-white text-black"
+    >
       {/* Sidebar */}
       <motion.aside 
         initial={false}
-        animate={{ width: isSidebarOpen ? 280 : 80 }}
+        animate={{ width: isSidebarOpen ? 280 : 65 }}
         className="bg-zinc-50 flex flex-col h-full transition-all duration-300 ease-in-out relative border-r border-zinc-200"
       >
         <div className="p-4 flex flex-col h-full items-center">
           <div 
-            className="p-2 rounded-full w-fit mb-8 text-zinc-600"
+            className="p-2 rounded-none w-fit mb-4 text-zinc-600"
           >
-            <Menu size={28} />
+            <Menu size={20} />
           </div>
 
-          <div className="mt-auto space-y-2 w-full flex flex-col items-center">
+          <button 
+            onClick={() => setShowNewChatConfirm(true)}
+            className="p-2 hover:bg-zinc-200 rounded-none transition-colors text-black mb-8"
+            title="Chat Baru"
+          >
+            <Plus size={20} />
+          </button>
+
+          <div className="mt-auto space-y-4 w-full flex flex-col items-center pb-4">
             <button 
               onClick={() => setShowHelp(true)} 
-              className={`flex items-center gap-3 w-full hover:bg-zinc-200 rounded-xl transition-colors text-sm font-medium ${isSidebarOpen ? 'px-4 py-3' : 'p-4 justify-center'}`}
+              className={`flex items-center gap-3 w-full hover:bg-zinc-200 rounded-none transition-colors text-sm font-medium ${isSidebarOpen ? 'px-4 py-3' : 'p-1 justify-center'}`}
             >
-              <HelpCircle size={24} />
+              <HelpCircle size={34} />
               {isSidebarOpen && <span>Bantuan</span>}
             </button>
             <button 
               onClick={() => setShowSettings(true)} 
-              className={`flex items-center gap-3 w-full hover:bg-zinc-200 rounded-xl transition-colors text-sm font-medium ${isSidebarOpen ? 'px-4 py-3' : 'p-4 justify-center'}`}
+              className={`flex items-center gap-3 w-full hover:bg-zinc-200 rounded-none transition-colors text-sm font-medium ${isSidebarOpen ? 'px-4 py-3' : 'p-1 justify-center'}`}
             >
-              <Settings size={24} />
+              <Settings size={34} />
               {isSidebarOpen && <span>Setelan</span>}
             </button>
           </div>
@@ -232,39 +303,44 @@ export default function App() {
           <div className="flex-1 overflow-y-auto no-scrollbar">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center px-4">
-                <h2 className="text-5xl font-black mb-12 text-center leading-tight tracking-tighter uppercase">
+                <motion.h2 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="text-5xl font-black mb-12 text-center leading-tight tracking-tighter uppercase"
+                >
                   <span className="text-black">HALO, SAYA PUFUTARA AI.</span>
                   <br />
                   <span className="text-zinc-300">ADA YANG BISA DIBANTU?</span>
-                </h2>
+                </motion.h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl w-full">
-                  {[
-                    "Buat halaman login cantik dengan Tailwind",
-                    "Jelaskan konsep kuantum fisika",
-                    "Ide hadiah untuk ulang tahun teman",
-                    "Buat rencana perjalanan ke Bali"
-                  ].map((suggestion, i) => (
+                <motion.div 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-2xl w-full"
+                >
+                  {randomSuggestions.map((suggestion, i) => (
                     <button 
                       key={i}
                       onClick={() => setInput(suggestion)}
-                      className="p-4 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-left text-sm text-zinc-800 dark:text-zinc-200 transition-all h-24 flex flex-col justify-between group"
+                      className="p-4 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-2xl text-left text-sm text-zinc-800 transition-all h-[5.5rem] flex flex-col justify-between group"
                     >
-                      <span className="font-medium">{suggestion}</span>
-                      <Plus size={16} className="ml-auto text-zinc-400 group-hover:text-black dark:group-hover:text-white transition-colors" />
+                      <span className="font-medium line-clamp-2 text-xs">{suggestion}</span>
+                      <Plus size={14} className="ml-auto text-zinc-400 group-hover:text-black transition-colors" />
                     </button>
                   ))}
-                </div>
+                </motion.div>
               </div>
             ) : (
               <div className="max-w-4xl mx-auto w-full px-4 py-8">
                 <AnimatePresence initial={false}>
                   {messages.map((msg, idx) => (
                     <div key={idx} className={`flex gap-4 mb-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black uppercase ${msg.role === 'user' ? 'bg-black dark:bg-white text-white dark:text-black' : 'bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white'}`}>
-                        {msg.role === 'user' ? 'P' : <Sparkles size={16} />}
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user' ? 'bg-black text-white' : 'bg-zinc-100 text-black'}`}>
+                        {msg.role === 'user' ? <User size={16} /> : <Sparkles size={16} />}
                       </div>
-                      <div className={`flex-1 max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
+                      <div className={`flex-1 max-w-[60%] ${msg.role === 'user' ? 'text-right' : ''}`}>
                         <div className={`group relative inline-block text-left p-4 rounded-2xl transition-all duration-200 ${
                           msg.role === 'user' 
                             ? 'bg-white dark:bg-zinc-800 text-black dark:text-white border border-zinc-200 dark:border-zinc-700 shadow-sm hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-600' 
@@ -407,6 +483,7 @@ export default function App() {
                 <ImageIcon size={20} />
               </button>
               <input
+                ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -422,13 +499,24 @@ export default function App() {
                 >
                   <Mic size={20} />
                 </button>
-                <button 
-                  type="submit" 
-                  disabled={(!input.trim() && !selectedImage) || isLoading}
-                  className={`p-2 rounded-full transition-all ${(!input.trim() && !selectedImage) || isLoading ? 'text-zinc-300 dark:text-zinc-700' : 'text-black dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800'}`}
-                >
-                  <Send size={20} />
-                </button>
+                {isGenerating ? (
+                  <button 
+                    type="button" 
+                    onClick={stopGeneration}
+                    className="p-2 text-black dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full transition-all"
+                    title="Hentikan Generasi"
+                  >
+                    <Square size={20} fill="currentColor" />
+                  </button>
+                ) : (
+                  <button 
+                    type="submit" 
+                    disabled={(!input.trim() && !selectedImage) || isLoading}
+                    className={`p-2 rounded-full transition-all ${(!input.trim() && !selectedImage) || isLoading ? 'text-zinc-300 dark:text-zinc-700' : 'text-black dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800'}`}
+                  >
+                    <Send size={20} />
+                  </button>
+                )}
               </div>
             </form>
             <p className="text-[10px] text-center text-zinc-400 mt-4 font-medium uppercase tracking-tighter">
@@ -440,6 +528,42 @@ export default function App() {
 
       {/* Modals */}
       <AnimatePresence>
+        {showNewChatConfirm && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl border border-zinc-200"
+            >
+              <div className="w-16 h-16 bg-zinc-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                <Plus size={32} className="text-black" />
+              </div>
+              <h3 className="text-xl font-black text-center uppercase tracking-tighter mb-4">Mulai Chat Baru?</h3>
+              <p className="text-zinc-500 text-center text-sm font-medium mb-8 leading-relaxed">
+                Apakah anda yakin untuk membuat chat baru dan menghapus chat sekarang?
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowNewChatConfirm(false)}
+                  className="flex-1 px-4 py-4 rounded-2xl font-black uppercase tracking-widest text-xs border border-zinc-200 hover:bg-zinc-50 transition-colors"
+                >
+                  Batal
+                </button>
+                <button 
+                  onClick={() => {
+                    setMessages([]);
+                    setShowNewChatConfirm(false);
+                  }}
+                  className="flex-1 px-4 py-4 rounded-2xl font-black uppercase tracking-widest text-xs bg-black text-white hover:bg-zinc-800 transition-colors"
+                >
+                  Ya, Hapus
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
         {showHelp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <motion.div 
@@ -557,10 +681,8 @@ export default function App() {
                   <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-2">Manajemen Data</p>
                   <button 
                     onClick={() => {
-                      if(confirm('Hapus semua riwayat chat?')) {
-                        setMessages([]);
-                        setShowSettings(false);
-                      }
+                      setMessages([]);
+                      setShowSettings(false);
                     }}
                     className="w-full flex items-center justify-center gap-3 bg-white border border-zinc-200 text-red-500 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-50 transition-all active:scale-[0.98]"
                   >
@@ -581,6 +703,6 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
