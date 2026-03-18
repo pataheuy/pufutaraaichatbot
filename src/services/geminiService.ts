@@ -51,7 +51,7 @@ export class GeminiService {
       model: modelName,
       history: formattedHistory,
       config: {
-        systemInstruction: "You are Pufutara AI, a helpful, friendly, and intelligent AI assistant. You can see and analyze images if provided.",
+        systemInstruction: "You are Pufutara AI, a helpful, friendly, and intelligent AI assistant. The user's name is pufutara. You should address them as pufutara when appropriate. You can see and analyze images if provided.",
       }
     });
 
