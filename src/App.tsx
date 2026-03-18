@@ -307,7 +307,7 @@ export default function App() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className="text-5xl font-black mb-12 text-center leading-tight tracking-tighter uppercase"
+                  className="text-3xl sm:text-5xl font-black mb-8 sm:mb-12 text-center leading-tight tracking-tighter uppercase"
                 >
                   <span className="text-black">HALO, SAYA PUFUTARA AI.</span>
                   <br />
@@ -324,9 +324,9 @@ export default function App() {
                     <button 
                       key={i}
                       onClick={() => setInput(suggestion)}
-                      className="p-4 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-2xl text-left text-sm text-zinc-800 transition-all h-[5.5rem] flex flex-col justify-between group"
+                      className="p-3 sm:p-4 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-2xl text-left text-zinc-800 transition-all h-[4.5rem] sm:h-[5.5rem] flex flex-col justify-between group"
                     >
-                      <span className="font-medium line-clamp-2 text-xs">{suggestion}</span>
+                      <span className="font-medium line-clamp-2 text-[10px] sm:text-xs">{suggestion}</span>
                       <Plus size={14} className="ml-auto text-zinc-400 group-hover:text-black transition-colors" />
                     </button>
                   ))}
@@ -340,12 +340,12 @@ export default function App() {
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user' ? 'bg-black text-white' : 'bg-zinc-100 text-black'}`}>
                         {msg.role === 'user' ? <User size={16} /> : <Sparkles size={16} />}
                       </div>
-                      <div className={`flex-1 max-w-[60%] ${msg.role === 'user' ? 'text-right' : ''}`}>
-                        <div className={`group relative inline-block text-left p-4 rounded-2xl transition-all duration-200 ${
+                      <div className={`flex-1 max-w-[85%] sm:max-w-[60%] ${msg.role === 'user' ? 'text-right' : ''}`}>
+                        <div className={`group relative inline-block text-left p-3 sm:p-4 rounded-2xl transition-all duration-200 ${
                           msg.role === 'user' 
                             ? 'bg-white dark:bg-zinc-800 text-black dark:text-white border border-zinc-200 dark:border-zinc-700 shadow-sm hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-600' 
                             : 'bg-zinc-50 dark:bg-zinc-900 text-black dark:text-white border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 hover:border-zinc-200 dark:hover:border-zinc-700'
-                        } prose dark:prose-invert prose-p:last:mb-0 max-w-none`}>
+                        } prose dark:prose-invert prose-p:last:mb-0 max-w-none text-sm sm:text-base`}>
                           {msg.image && (
                             <img 
                               src={`data:${msg.image.mimeType};base64,${msg.image.data}`} 
@@ -488,7 +488,7 @@ export default function App() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Tanya Pufutara..."
-                className="flex-1 bg-transparent border-none focus:ring-0 text-base py-2 px-3 text-black dark:text-white placeholder-zinc-400"
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm sm:text-base py-2 px-3 text-black dark:text-white placeholder-zinc-400"
                 disabled={isLoading}
               />
               <div className="flex items-center gap-1">
